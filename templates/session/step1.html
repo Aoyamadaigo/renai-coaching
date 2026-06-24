@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from "macros.html" import step_nav %}
+{% from "macros.html" import step_nav with context %}
 {% block title %}STEP 1 — 恋愛年表{% endblock %}
 {% block body %}
 {{ step_nav(ws, 1) }}
