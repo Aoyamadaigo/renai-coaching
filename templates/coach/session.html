@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+{% from "macros.html" import flower, answer %}
+{% block title %}セッション確認 — {{ ws.user.name }}{% endblock %}
+{% block body %}
+<nav class="nav">
+  <a href="{{ url_for('coach_dashboard') }}" class="nav-logo">{{ flower(28) }} Amour</a>
+  <div class="nav-right">
+    <span class="nav-badge">COACH</span>
+    <a href="{{ url_for('coach_user', user_id=ws.user.id) }}" class="nav-link">← {{ ws.user.name }}</a>
+    <a href="{{ url_for('logout') }}" class="nav-link">ログアウト</a>
+  </div>
+</nav>
+
+<div class="container-lg">
+  <!-- Header -->
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:36px">
+    <div>
+      <p style="font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:6px">Client Session</p>
+      <h2 style="font-family:'Cormorant Garamond',serif;font-size:36px;font-weight:300;color:var(--plum);margin:0 0 4px">{{ ws.user.name }}</h2>
+      <p style="font-size:13px;color:var(--muted)">
+        {{ ws.created_at | fmt_date }} ・
+        <span class="badge {% if ws.completed %}badge-done{% else %}badge-wip{% endif %}" style="font-size:11px">
+          {% if ws.completed %}完了{% else %}作業中 — STEP {{ ws.current_step }} まで{% endif %}
+        </span>
+      </p>
+    </div>
+    <div style="text-align:right">
+      <p style="font-size:11px;color:var(--muted-lt);margin:0">最終更新</p>
+      <p style="font-size:13px;color:var(--muted);margin:2px 0 0">{{ ws.updated_at | fmt_datetime }}</p>
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 340px;gap:24px;align-items:start">
+    <!-- Left: answers -->
+    <div>
+      <!-- Profile summary -->
+      {% if profile and (profile.ideal_partner or profile.current_goal or profile.action_items) %}
+      <div class="card" style="margin-bottom:20px;background:linear-gradient(135deg,rgba(61,42,62,.03),rgba(196,133,122,.06))">
+        <h3 style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:400;color:var(--plum);margin:0 0 14px;padding-bottom:10px;border-bottom:1px solid var(--border)">
+          マイノート — 本人記入
+        </h3>
+        {% if profile.ideal_partner %}<div class="answer-block"><div class="answer-label">理想のパートナー・関係像</div><div class="answer-text">{{ profile.ideal_partner }}</div></div>{% endif %}
+        {% if profile.current_goal %}<div class="answer-block"><div class="answer-label">今の目標</div><div class="answer-text">{{ profile.current_goal }}</div></div>{% endif %}
+        {% if profile.action_items %}<div class="answer-block"><div class="answer-label">次のアクションプラン</div><div class="answer-text">{{ profile.action_items }}</div></div>{% endif %}
+      </div>
+      {% endif %}
+
+      <!-- STEP 1 -->
+      <div class="card" style="margin-bottom:20px">
+        <h3 style="font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:400;color:var(--plum);margin:0 0 16px;padding-bottom:12px;border-bottom:1px solid var(--border)">
+          STEP 1 ── 恋愛年表
+        </h3>
+        {% if ws.events %}
+        <table>
+          <thead><tr><th>時期</th><th>相手</th><th>出会い</th><th>付き合った理由</th></tr></thead>
+          <tbody>
+            {% for ev in ws.events %}
+            <tr>
+              <td style="color:var(--muted);font-size:13px">{{ ev.time_period or '—' }}</td>
+              <td style="font-weight:500">{{ ev.partner_name or '—' }}</td>
+              <td style="color:var(--muted);font-size:13px">{{ ev.community or '—' }}</td>
+              <td style="font-size:13px">{{ ev.reason or '—' }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        {% else %}
+        <p class="answer-empty">未記入</p>
+        {% endif %}
+      </div>
+
+      <!-- STEP 2 -->
+      {% for num in [1,2,3] %}
+      {% set love = loves.get(num) %}
+      {% if love %}
+      <div class="card" style="margin-bottom:20px">
+        <h3 style="font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:400;color:var(--plum);margin:0 0 16px;padding-bottom:12px;border-bottom:1px solid var(--border)">
+          STEP 2 ── 恋愛 {{ '①②③'[num-1] }}
+        </h3>
+        {% if love.attraction or love.self_image or love.joys %}
+          {{ answer('① 惹かれた理由', love.attraction) }}
+          {{ answer('② 当時の自分', love.self_image) }}
+          {{ answer('③ 苦しかったこと', love.hardships) }}
+          {{ answer('④ 楽しかったこと', love.joys) }}
+          {{ answer('⑤ 別れた理由', love.breakup_reason) }}
+          {{ answer('⑥ 学んだこと', love.learning) }}
+        {% else %}
+          <p class="answer-empty">未記入</p>
+        {% endif %}
+      </div>
+      {% endif %}
+      {% endfor %}
+
+      <!-- STEP 3 -->
+      <div class="card" style="margin-bottom:20px">
+        <h3 style="font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:400;color:var(--plum);margin:0 0 16px;padding-bottom:12px;border-bottom:1px solid var(--border)">
+          STEP 3 ── パターン分析
+        </h3>
+        {% if ws.analysis %}
+          {{ answer('好きになる相手の共通点', ws.analysis.commonalities) }}
+          {{ answer('苦しくなりやすい場面', ws.analysis.struggles) }}
+          {{ answer('取りやすい行動', ws.analysis.behaviors) }}
+          {{ answer('別れのきっかけ', ws.analysis.triggers) }}
+          {{ answer('本当に求めているもの', ws.analysis.desires) }}
+        {% else %}
+          <p class="answer-empty">未記入</p>
+        {% endif %}
+      </div>
+
+      <!-- Summary -->
+      <div class="card" style="margin-bottom:0;background:linear-gradient(135deg,rgba(61,42,62,.03),rgba(196,133,122,.07))">
+        <h3 style="font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:400;color:var(--plum);margin:0 0 16px;padding-bottom:12px;border-bottom:1px solid rgba(196,133,122,.2)">
+          まとめ ── 私の恋愛傾向
+        </h3>
+        {% if ws.summary %}
+          {{ answer('うまくいくパターン', ws.summary.good_patterns) }}
+          {{ answer('うまくいかないパターン', ws.summary.bad_patterns) }}
+          {{ answer('今後の行動テーマ', ws.summary.action_theme) }}
+        {% else %}
+          <p class="answer-empty">未記入</p>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Right: coach notes -->
+    <div style="position:sticky;top:20px">
+      <div style="background:var(--plum);border-radius:18px;padding:22px 22px 18px;margin-bottom:14px">
+        <h4 style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:300;color:#fff;margin:0 0 14px;letter-spacing:.04em">コーチメモ</h4>
+        <form method="POST" action="{{ url_for('coach_add_note', session_id=ws.id) }}">
+          <textarea name="content" rows="4" placeholder="セッション前の気づき・着目ポイント・質問メモなど…"
+            style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:#fff;border-radius:10px;padding:12px;font-family:'DM Sans',sans-serif;font-size:13px;width:100%;resize:vertical;outline:none;line-height:1.7"
+            onfocus="this.style.borderColor='rgba(196,133,122,.7)'" onblur="this.style.borderColor='rgba(255,255,255,.2)'"></textarea>
+          <button type="submit" class="btn" style="margin-top:10px;width:100%;background:var(--rose);color:#fff;border-radius:10px;padding:10px">メモを追加</button>
+        </form>
+      </div>
+
+      {% if ws.coach_notes %}
+        {% for note in ws.coach_notes %}
+        <div class="note-card">
+          <p class="note-meta">{{ note.coach.name }} ・ {{ note.created_at | fmt_datetime }}</p>
+          <p class="note-text">{{ note.content }}</p>
+          <form method="POST" action="{{ url_for('coach_delete_note', session_id=ws.id, note_id=note.id) }}" style="margin-top:8px">
+            <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('削除しますか？')">削除</button>
+          </form>
+        </div>
+        {% endfor %}
+      {% else %}
+        <p style="font-size:12px;color:var(--muted-lt);text-align:center;padding:20px 0">メモはまだありません</p>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

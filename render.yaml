@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: amour
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app
+    envVars:
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DATABASE_URL
+        fromDatabase:
+          name: amour-db
+          property: connectionString
+
+databases:
+  - name: amour-db
+    databaseName: amour
+    user: amour

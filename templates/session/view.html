@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% from "macros.html" import flower, answer %}
+{% block title %}セッション詳細{% endblock %}
+{% block body %}
+<nav class="nav">
+  <a href="{{ url_for('dashboard') }}" class="nav-logo">{{ flower(28) }} Amour</a>
+  <div class="nav-right">
+    <a href="{{ url_for('dashboard') }}" class="nav-link">← ダッシュボードへ</a>
+  </div>
+</nav>
+<div class="container-lg">
+  <div style="margin-bottom:32px;display:flex;justify-content:space-between;align-items:baseline">
+    <div>
+      <h2 style="font-family:'Cormorant Garamond',serif;font-size:36px;font-weight:300;color:var(--plum);margin:0 0 4px">振り返り完了</h2>
+      <p style="font-size:13px;color:var(--muted)">{{ ws.created_at | fmt_date }}</p>
+    </div>
+    <a href="{{ url_for('step1', session_id=ws.id) }}" class="btn btn-secondary btn-sm">編集する</a>
+  </div>
+
+  <!-- STEP 1 -->
+  <div class="card" style="margin-bottom:20px">
+    <h3 style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:400;color:var(--plum);margin:0 0 18px">STEP 1 ── 恋愛年表</h3>
+    {% if ws.events %}
+    <table>
+      <thead><tr><th>時期</th><th>相手</th><th>出会い</th><th>理由</th></tr></thead>
+      <tbody>
+        {% for ev in ws.events %}
+        <tr>
+          <td>{{ ev.time_period or '—' }}</td>
+          <td>{{ ev.partner_name or '—' }}</td>
+          <td>{{ ev.community or '—' }}</td>
+          <td style="color:var(--muted)">{{ ev.reason or '—' }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}<p class="answer-empty">記入なし</p>{% endif %}
+  </div>
+
+  <!-- STEP 2 -->
+  {% for num in [1,2,3] %}
+  {% set love = loves.get(num) %}
+  {% if love and (love.attraction or love.self_image or love.joys) %}
+  <div class="card" style="margin-bottom:20px">
+    <h3 style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:400;color:var(--plum);margin:0 0 18px">STEP 2 ── 恋愛 ①②③ {{ num }}</h3>
+    {{ answer('どこに惹かれた？', love.attraction) }}
+    {{ answer('当時の自分は？', love.self_image) }}
+    {{ answer('苦しかったこと', love.hardships) }}
+    {{ answer('楽しかったこと', love.joys) }}
+    {{ answer('別れた理由', love.breakup_reason) }}
+    {{ answer('学んだこと', love.learning) }}
+  </div>
+  {% endif %}
+  {% endfor %}
+
+  <!-- STEP 3 -->
+  {% if ws.analysis %}
+  <div class="card" style="margin-bottom:20px">
+    <h3 style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:400;color:var(--plum);margin:0 0 18px">STEP 3 ── パターン分析</h3>
+    {{ answer('好きになる相手の共通点', ws.analysis.commonalities) }}
+    {{ answer('苦しくなりやすい場面', ws.analysis.struggles) }}
+    {{ answer('取りやすい行動', ws.analysis.behaviors) }}
+    {{ answer('別れのきっかけ', ws.analysis.triggers) }}
+    {{ answer('本当に求めているもの', ws.analysis.desires) }}
+  </div>
+  {% endif %}
+
+  <!-- Summary -->
+  {% if ws.summary %}
+  <div class="card" style="margin-bottom:20px;background:linear-gradient(135deg,rgba(61,42,62,.03),rgba(196,133,122,.07))">
+    <h3 style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:400;color:var(--plum);margin:0 0 18px">まとめ ── 私の恋愛傾向</h3>
+    {{ answer('うまくいくパターン', ws.summary.good_patterns) }}
+    {{ answer('うまくいかないパターン', ws.summary.bad_patterns) }}
+    {{ answer('今後の行動テーマ', ws.summary.action_theme) }}
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

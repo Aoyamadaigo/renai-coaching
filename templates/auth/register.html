@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% from "macros.html" import flower, flash_messages %}
+{% block title %}新規登録{% endblock %}
+{% block body %}
+<div style="min-height:100vh;background:linear-gradient(160deg,#F5F0EB,#EDE4DC);display:flex;align-items:center;justify-content:center;padding:20px">
+  <div style="width:100%;max-width:440px">
+    <div style="text-align:center;margin-bottom:36px">
+      {{ flower(48) }}
+      <h1 style="font-family:'Cormorant Garamond',serif;font-size:36px;font-weight:300;color:var(--plum);margin:12px 0 6px;letter-spacing:.06em">Amour</h1>
+      <p style="font-size:12px;color:var(--muted);letter-spacing:.12em">新規アカウント登録</p>
+    </div>
+    <div class="card-white">
+      {{ flash_messages() }}
+      <form method="POST">
+        <div class="field"><label>お名前</label><input type="text" name="name" placeholder="山田 花子" required></div>
+        <div class="field"><label>メールアドレス</label><input type="email" name="email" placeholder="your@email.com" required></div>
+        <div class="field"><label>パスワード</label><input type="password" name="password" placeholder="8文字以上を推奨" required></div>
+        <div class="field">
+          <label>アカウント種別</label>
+          <select name="role">
+            <option value="user">ユーザー（クライアント）</option>
+            <option value="coach">コーチ</option>
+          </select>
+        </div>
+        <button type="submit" class="btn btn-primary btn-full" style="margin-top:10px">登録する →</button>
+      </form>
+      <p style="text-align:center;margin-top:20px;font-size:13px;color:var(--muted)">
+        すでにアカウントをお持ちの方は <a href="{{ url_for('login') }}" style="color:var(--rose)">ログイン</a>
+      </p>
+    </div>
+  </div>
+</div>
+{% endblock %}

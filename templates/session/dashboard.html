@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+{% from "macros.html" import flower %}
+{% block title %}ダッシュボード{% endblock %}
+{% block body %}
+<nav class="nav">
+  <a href="{{ url_for('dashboard') }}" class="nav-logo">{{ flower(28) }} Amour</a>
+  <div class="nav-right">
+    <span class="nav-user">{{ current_user.name }}</span>
+    <a href="{{ url_for('logout') }}" class="nav-link">ログアウト</a>
+  </div>
+</nav>
+
+<div style="max-width:940px;margin:0 auto;padding:36px 20px 60px">
+  <div style="margin-bottom:32px">
+    <h2 style="font-family:'Cormorant Garamond',serif;font-size:40px;font-weight:300;color:var(--plum);margin:0 0 6px;font-style:italic;line-height:1.2">
+      ようこそ、{{ current_user.name }}さん
+    </h2>
+    <p style="font-size:13px;color:var(--muted);line-height:1.9">
+      恋愛の年表を振り返ることで、あなた自身のパターンと、本当に求めているものが見えてきます。
+    </p>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 310px;gap:24px;align-items:start">
+
+    <!-- Left: new session + history -->
+    <div>
+      <a href="{{ url_for('new_session') }}" class="card-plum" style="display:block;text-decoration:none;margin-bottom:28px">
+        <div class="card-plum-circle1"></div>
+        <div class="card-plum-circle2"></div>
+        <div style="position:relative">
+          <p style="font-size:10px;letter-spacing:.2em;color:#D49B8E;margin:0 0 8px;text-transform:uppercase">New Session</p>
+          <h3 style="font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:400;color:#fff;margin:0 0 6px">新しいセッションを始める</h3>
+          <p style="font-size:12px;color:rgba(255,255,255,.45);margin:0">恋愛年表ワーク ｜ STEP 1〜まとめ</p>
+        </div>
+      </a>
+
+      {% if sessions %}
+      <div class="section-label">セッション履歴</div>
+      {% for ws in sessions %}
+      <a href="{{ url_for('step1', session_id=ws.id) if not ws.completed else url_for('view_session', session_id=ws.id) }}" class="session-item">
+        <div>
+          <p style="font-size:14px;font-weight:500;color:var(--text);margin:0">{{ ws.created_at | fmt_date }}</p>
+          <p style="font-size:12px;color:var(--muted);margin:3px 0 0">最終更新：{{ ws.updated_at | fmt_date }}</p>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <span class="badge {% if ws.completed %}badge-done{% else %}badge-wip{% endif %}">
+            {% if ws.completed %}✓ 完了{% else %}作業中{% endif %}
+          </span>
+          <span style="color:var(--muted-lt);font-size:20px;line-height:1">›</span>
+        </div>
+      </a>
+      {% endfor %}
+      {% else %}
+      <div style="text-align:center;padding:36px 0">
+        <p style="font-size:13px;color:var(--muted-lt);line-height:1.9">まだセッションがありません。<br>上のカードから最初のワークを始めましょう。</p>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Right: my note panel -->
+    <div style="position:sticky;top:20px">
+      <div style="background:var(--card);border-radius:18px;border:1px solid var(--border);overflow:hidden">
+        <div style="background:var(--plum);padding:16px 20px;display:flex;justify-content:space-between;align-items:center">
+          <h4 style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:300;color:#fff;margin:0;letter-spacing:.04em">マイノート</h4>
+          <span id="profile-save-status" style="font-size:11px;color:rgba(255,255,255,.4)"> </span>
+        </div>
+
+        <div style="padding:18px 20px;display:flex;flex-direction:column;gap:16px">
+
+          <div>
+            <label style="font-size:10px;font-weight:500;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:5px">
+              理想のパートナー・関係像
+            </label>
+            <textarea id="p_ideal" rows="3" oninput="triggerProfileSave()"
+              placeholder="例）一緒にいて自然体でいられる、価値観が近い人"
+              style="width:100%;padding:10px 12px;border-radius:9px;border:1.5px solid var(--border);background:#fff;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);resize:none;outline:none;line-height:1.65;box-sizing:border-box">{{ profile.ideal_partner if profile else '' }}</textarea>
+          </div>
+
+          <div>
+            <label style="font-size:10px;font-weight:500;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:5px">
+              今の目標
+            </label>
+            <textarea id="p_goal" rows="2" oninput="triggerProfileSave()"
+              placeholder="例）半年以内に自分の恋愛パターンを理解する"
+              style="width:100%;padding:10px 12px;border-radius:9px;border:1.5px solid var(--border);background:#fff;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);resize:none;outline:none;line-height:1.65;box-sizing:border-box">{{ profile.current_goal if profile else '' }}</textarea>
+          </div>
+
+          <div>
+            <label style="font-size:10px;font-weight:500;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:5px">
+              次のアクションプラン
+            </label>
+            <textarea id="p_action" rows="3" oninput="triggerProfileSave()"
+              placeholder="例）・金銭感覚の条件を3つ決める&#10;・尽くしすぎていないか振り返る"
+              style="width:100%;padding:10px 12px;border-radius:9px;border:1.5px solid var(--border);background:#fff;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);resize:vertical;outline:none;line-height:1.65;box-sizing:border-box">{{ profile.action_items if profile else '' }}</textarea>
+          </div>
+
+          <div>
+            <label style="font-size:10px;font-weight:500;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:5px">
+              メモ
+            </label>
+            <textarea id="p_notes" rows="3" oninput="triggerProfileSave()"
+              placeholder="セッション間に気づいたこと、感じたことを自由に"
+              style="width:100%;padding:10px 12px;border-radius:9px;border:1.5px solid var(--border);background:#fff;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);resize:vertical;outline:none;line-height:1.65;box-sizing:border-box">{{ profile.notes if profile else '' }}</textarea>
+          </div>
+
+        </div>
+
+        {% if profile and profile.updated_at %}
+        <div style="padding:0 20px 14px">
+          <p style="font-size:11px;color:var(--muted-lt);margin:0">最終更新：{{ profile.updated_at | fmt_datetime }}</p>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+  </div><!-- /grid -->
+</div>
+
+<script>
+let profileTimer = null;
+
+function triggerProfileSave() {
+  setSt('保存中…');
+  clearTimeout(profileTimer);
+  profileTimer = setTimeout(doProfileSave, 900);
+}
+
+function g(id) { return (document.getElementById(id)||{}).value||''; }
+
+async function doProfileSave() {
+  const data = {
+    ideal_partner: g('p_ideal'),
+    current_goal:  g('p_goal'),
+    action_items:  g('p_action'),
+    notes:         g('p_notes'),
+  };
+  try {
+    const r = await fetch('/dashboard/profile/save', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify(data)
+    });
+    setSt(r.ok ? '保存済み ✓' : '保存失敗');
+  } catch { setSt('保存失敗'); }
+}
+
+function setSt(msg) {
+  const el = document.getElementById('profile-save-status');
+  if (el) el.textContent = msg;
+}
+
+// Focus ring on textareas
+document.querySelectorAll('textarea').forEach(ta => {
+  ta.addEventListener('focus', () => ta.style.borderColor = 'var(--rose)');
+  ta.addEventListener('blur',  () => ta.style.borderColor = 'var(--border)');
+});
+</script>
+{% endblock %}

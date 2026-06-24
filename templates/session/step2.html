@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% from "macros.html" import step_nav %}
+{% block title %}STEP 2 — 各恋愛を振り返る{% endblock %}
+{% block body %}
+{{ step_nav(ws, 2) }}
+<div class="work-wrap">
+  <div class="step-header">
+    <div class="step-header-row">
+      <span class="step-num">02</span>
+      <h2 class="step-title">各恋愛を振り返る</h2>
+    </div>
+    <p class="step-sub">最も印象的だった恋愛を1〜3つ選び、それぞれについて丁寧に振り返ってみましょう。1つだけでも大丈夫です。</p>
+    <div class="step-divider"></div>
+  </div>
+
+  <div class="tabs">
+    <a href="#" class="tab active" data-tab="1" onclick="switchTab(1,event)">恋愛 ①</a>
+    <a href="#" class="tab" data-tab="2" onclick="switchTab(2,event)">恋愛 ②</a>
+    <a href="#" class="tab" data-tab="3" onclick="switchTab(3,event)">恋愛 ③</a>
+  </div>
+
+  {% for num in [1,2,3] %}
+  {% set love = loves.get(num) %}
+  <div id="panel-{{ num }}" style="display:{% if num==1 %}block{% else %}none{% endif %}">
+    <div class="field"><label>① その人のどこに惹かれましたか？</label>
+      <textarea rows="3" placeholder="例）自分と正反対で、どこか危うさを持っていた。" onchange="saveLove({{ num }})"
+        id="l{{ num }}_attraction">{{ love.attraction if love else '' }}</textarea></div>
+    <div class="field"><label>② 付き合っている時、どんな自分でしたか？</label>
+      <textarea rows="3" placeholder="例）相手に合わせすぎて、自分の意見が言えなかった。" onchange="saveLove({{ num }})"
+        id="l{{ num }}_self_image">{{ love.self_image if love else '' }}</textarea></div>
+    <div class="field"><label>③ 苦しかった・つらかった時はありますか？</label>
+      <textarea rows="3" placeholder="例）返信が遅いと不安になり、確認し続けてしまった。" onchange="saveLove({{ num }})"
+        id="l{{ num }}_hardships">{{ love.hardships if love else '' }}</textarea></div>
+    <div class="field"><label>④ 楽しかった・嬉しかった時はありますか？</label>
+      <textarea rows="3" placeholder="例）一緒に旅行した時、初めて自然体でいられた。" onchange="saveLove({{ num }})"
+        id="l{{ num }}_joys">{{ love.joys if love else '' }}</textarea></div>
+    <div class="field"><label>⑤ 別れた（終わった）理由は何でしたか？</label>
+      <textarea rows="3" placeholder="例）価値観の違いが埋められず、自然消滅してしまった。" onchange="saveLove({{ num }})"
+        id="l{{ num }}_breakup_reason">{{ love.breakup_reason if love else '' }}</textarea></div>
+    <div class="field"><label>⑥ 今振り返ると、その恋愛で学んだことは？</label>
+      <textarea rows="3" placeholder="例）自分を犠牲にしてまで愛されたかったことに気づいた。" onchange="saveLove({{ num }})"
+        id="l{{ num }}_learning">{{ love.learning if love else '' }}</textarea></div>
+  </div>
+  {% endfor %}
+
+  <div class="work-nav">
+    <a href="{{ url_for('step1', session_id=ws.id) }}" class="btn btn-secondary">← 前のステップ</a>
+    <a href="{{ url_for('step3', session_id=ws.id) }}" class="btn btn-primary">次のステップへ →</a>
+  </div>
+</div>
+<script>
+const SESSION_ID = {{ ws.id }};
+let saveTimers = {};
+
+function switchTab(num, e) {
+  e.preventDefault();
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  e.target.classList.add('active');
+  [1,2,3].forEach(n => document.getElementById('panel-'+n).style.display = n==num?'block':'none');
+}
+
+function saveLove(num) {
+  setSaveStatus('保存中…');
+  clearTimeout(saveTimers[num]);
+  saveTimers[num] = setTimeout(() => doSaveLove(num), 900);
+}
+
+function g(id) { return (document.getElementById(id)||{}).value || ''; }
+
+async function doSaveLove(num) {
+  const data = {
+    love_num: num,
+    attraction:     g(`l${num}_attraction`),
+    self_image:     g(`l${num}_self_image`),
+    hardships:      g(`l${num}_hardships`),
+    joys:           g(`l${num}_joys`),
+    breakup_reason: g(`l${num}_breakup_reason`),
+    learning:       g(`l${num}_learning`)
+  };
+  try {
+    const r = await fetch(`/session/${SESSION_ID}/step2/save`, {
+      method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data)
+    });
+    setSaveStatus(r.ok ? '保存済み ✓' : '保存失敗');
+  } catch { setSaveStatus('保存失敗'); }
+}
+
+function setSaveStatus(msg) { const el=document.getElementById('save-status'); if(el) el.textContent=msg; }
+</script>
+{% endblock %}

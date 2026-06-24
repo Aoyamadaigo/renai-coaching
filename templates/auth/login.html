@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% from "macros.html" import flower, flash_messages %}
+{% block title %}ログイン{% endblock %}
+{% block body %}
+<div style="min-height:100vh;background:linear-gradient(160deg,#F5F0EB,#EDE4DC);display:flex;align-items:center;justify-content:center;padding:20px">
+  <div style="width:100%;max-width:420px">
+    <div style="text-align:center;margin-bottom:36px">
+      {{ flower(56) }}
+      <h1 style="font-family:'Cormorant Garamond',serif;font-size:40px;font-weight:300;color:var(--plum);margin:12px 0 6px;letter-spacing:.06em">Amour</h1>
+      <p style="font-size:12px;color:var(--muted);letter-spacing:.12em">恋愛パターン・ジャーナル</p>
+    </div>
+    <div class="card-white">
+      <p style="font-size:14px;color:var(--muted);margin:0 0 28px;line-height:1.9;text-align:center">
+        あなたの恋愛の歩みを、<br>ていねいに紐解いていきましょう。
+      </p>
+      {{ flash_messages() }}
+      <form method="POST">
+        <div class="field"><label>メールアドレス</label><input type="email" name="email" placeholder="your@email.com" required></div>
+        <div class="field"><label>パスワード</label><input type="password" name="password" placeholder="••••••••" required></div>
+        <button type="submit" class="btn btn-primary btn-full" style="margin-top:6px">ログイン →</button>
+      </form>
+      <p style="text-align:center;margin-top:20px;font-size:13px;color:var(--muted)">
+        アカウントがない方は <a href="{{ url_for('register') }}" style="color:var(--rose)">新規登録</a>
+      </p>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% from "macros.html" import step_nav %}
+{% block title %}STEP 3 — パターン分析{% endblock %}
+{% block body %}
+{{ step_nav(ws, 3) }}
+<div class="work-wrap">
+  <div class="step-header">
+    <div class="step-header-row">
+      <span class="step-num">03</span>
+      <h2 class="step-title">恋愛パターンを分析する</h2>
+    </div>
+    <p class="step-sub">振り返りを通じて見えてきた、あなた独自の恋愛パターンを言語化してみましょう。</p>
+    <div class="step-divider"></div>
+  </div>
+
+  {% set qs = [
+    ('commonalities', '01', '好きになる相手の共通点', '例）年上で、自分をリードしてくれる人。経済的に安定しているが、支配的になりやすい。'),
+    ('struggles',     '02', '恋愛で苦しくなりやすい場面', '例）相手が自分に夢中でなくなってきたと感じる時。返信が遅くなった時。'),
+    ('behaviors',     '03', '苦しくなる時に取りやすい行動', '例）過剰に連絡してしまう。急に冷たくして相手の反応を確かめる。'),
+    ('triggers',      '04', '別れにつながりやすいきっかけ', '例）価値観の違いが表面化した時。依存が強くなりすぎた時。'),
+    ('desires',       '05', '恋愛で本当に求めているもの', '例）安心感と自由の両立。ありのままの自分を受け入れてもらえる関係。')
+  ] %}
+
+  {% for field, num, label, ph in qs %}
+  <div class="card" style="margin-bottom:16px">
+    <div style="display:flex;align-items:baseline;gap:12px;margin-bottom:10px">
+      <span style="font-family:'Cormorant Garamond',serif;font-size:34px;font-weight:300;color:var(--rose-pale);line-height:1">{{ num }}</span>
+      <label style="margin-bottom:0">{{ label }}</label>
+    </div>
+    <textarea rows="3" id="{{ field }}" placeholder="{{ ph }}" oninput="triggerSave()">{{ ws.analysis[field] if ws.analysis else '' }}</textarea>
+  </div>
+  {% endfor %}
+
+  <div class="work-nav">
+    <a href="{{ url_for('step2', session_id=ws.id) }}" class="btn btn-secondary">← 前のステップ</a>
+    <a href="{{ url_for('session_summary', session_id=ws.id) }}" class="btn btn-primary">次のステップへ →</a>
+  </div>
+</div>
+<script>
+const SESSION_ID = {{ ws.id }};
+let saveTimer = null;
+function triggerSave() {
+  setSaveStatus('保存中…');
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(doSave, 900);
+}
+function g(id) { return (document.getElementById(id)||{}).value||''; }
+async function doSave() {
+  const data = {
+    commonalities: g('commonalities'), struggles: g('struggles'),
+    behaviors: g('behaviors'), triggers: g('triggers'), desires: g('desires')
+  };
+  try {
+    const r = await fetch(`/session/${SESSION_ID}/step3/save`, {
+      method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data)
+    });
+    setSaveStatus(r.ok ? '保存済み ✓' : '保存失敗');
+  } catch { setSaveStatus('保存失敗'); }
+}
+function setSaveStatus(msg) { const el=document.getElementById('save-status'); if(el) el.textContent=msg; }
+</script>
+{% endblock %}

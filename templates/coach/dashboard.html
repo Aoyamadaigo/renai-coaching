@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% from "macros.html" import flower %}
+{% block title %}コーチ ダッシュボード{% endblock %}
+{% block body %}
+<nav class="nav">
+  <a href="{{ url_for('coach_dashboard') }}" class="nav-logo">{{ flower(28) }} Amour</a>
+  <div class="nav-right">
+    <span class="nav-badge">COACH</span>
+    <span class="nav-user">{{ current_user.name }}</span>
+    <a href="{{ url_for('logout') }}" class="nav-link">ログアウト</a>
+  </div>
+</nav>
+<div class="container-lg">
+  <div style="margin-bottom:40px">
+    <h2 style="font-family:'Cormorant Garamond',serif;font-size:40px;font-weight:300;color:var(--plum);margin:0 0 8px">コーチ管理画面</h2>
+    <p style="font-size:13px;color:var(--muted)">クライアントの恋愛年表ワークをセッション前に確認できます。</p>
+  </div>
+
+  {% if user_data %}
+  <table>
+    <thead>
+      <tr>
+        <th>クライアント</th><th>メールアドレス</th><th>登録日</th>
+        <th style="text-align:center">セッション数</th><th style="text-align:center">完了</th>
+        <th>最終更新</th><th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for d in user_data %}
+      <tr class="table-row">
+        <td><strong>{{ d.user.name }}</strong></td>
+        <td style="color:var(--muted)">{{ d.user.email }}</td>
+        <td style="color:var(--muted)">{{ d.user.created_at | fmt_date }}</td>
+        <td style="text-align:center">{{ d.total }}</td>
+        <td style="text-align:center">
+          {% if d.completed > 0 %}<span class="badge badge-done">{{ d.completed }}</span>{% else %}—{% endif %}
+        </td>
+        <td style="color:var(--muted)">{{ d.latest.updated_at | fmt_date if d.latest else '—' }}</td>
+        <td><a href="{{ url_for('coach_user', user_id=d.user.id) }}" class="btn btn-ghost btn-sm">詳細 →</a></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <div style="text-align:center;padding:60px 0">
+    <p style="font-size:14px;color:var(--muted-lt)">まだ登録されているユーザーがいません。</p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

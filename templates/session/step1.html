@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% from "macros.html" import step_nav %}
+{% block title %}STEP 1 — 恋愛年表{% endblock %}
+{% block body %}
+{{ step_nav(ws, 1) }}
+<div class="work-wrap">
+  <div class="step-header">
+    <div class="step-header-row">
+      <span class="step-num">01</span>
+      <h2 class="step-title">恋愛年表を書き出す</h2>
+    </div>
+    <p class="step-sub">これまでの恋愛や印象的だった出来事を、時系列で思い出して書いてみましょう。<br>付き合った経験だけでなく「片思い」「数回デートした」経験も含みます。</p>
+    <div class="step-divider"></div>
+  </div>
+
+  <div class="hint">
+    <strong>ポイント：</strong>書けそうなものだけ、少しずつでも大丈夫です。順番は後から変えられます。
+  </div>
+
+  <div id="events-container"></div>
+
+  <button onclick="addEvent()" style="margin-top:4px;width:100%;padding:16px;border-radius:14px;border:1.5px dashed var(--border);background:transparent;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;letter-spacing:.04em;transition:border-color .2s"
+    onmouseover="this.style.borderColor='var(--rose)'" onmouseout="this.style.borderColor='var(--border)'">
+    ＋ 恋愛を追加する
+  </button>
+
+  <div class="work-nav">
+    <div></div>
+    <a href="{{ url_for('step2', session_id=ws.id) }}" class="btn btn-primary">次のステップへ →</a>
+  </div>
+</div>
+
+<script>
+const SESSION_ID = {{ ws.id }};
+let events = {{ events_data | tojson }};
+let saveTimer = null;
+
+function renderEvents() {
+  const c = document.getElementById('events-container');
+  c.innerHTML = '';
+  events.forEach((ev, i) => {
+    c.innerHTML += `
+    <div class="event-card">
+      <span class="event-num">${String(i+1).padStart(2,'0')}</span>
+      <div class="field-grid2">
+        <div><label>時期</label><input type="text" value="${esc(ev.time)}" placeholder="例）28歳・大学時代" oninput="upd(${i},'time',this.value)"></div>
+        <div><label>相手（仮名OK）</label><input type="text" value="${esc(ev.name)}" placeholder="例）Kさん" oninput="upd(${i},'name',this.value)"></div>
+      </div>
+      <div class="field"><label>知り合ったコミュニティ</label><input type="text" value="${esc(ev.community)}" placeholder="例）職場・マッチングアプリ・共通の友人" oninput="upd(${i},'community',this.value)"></div>
+      <div class="field" style="margin-bottom:0"><label>付き合おうと思った理由</label><input type="text" value="${esc(ev.reason)}" placeholder="例）話していて楽しかった。安心感があった。" oninput="upd(${i},'reason',this.value)"></div>
+      <button class="event-del" onclick="delEvent(${i})">削除</button>
+    </div>`;
+  });
+}
+
+function esc(s) { return (s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
+function upd(i, k, v) { events[i][k] = v; triggerSave(); }
+function addEvent() { events.push({time:'',name:'',community:'',reason:''}); renderEvents(); triggerSave(); }
+function delEvent(i) { events.splice(i,1); renderEvents(); triggerSave(); }
+
+function triggerSave() {
+  setSaveStatus('保存中…');
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(doSave, 900);
+}
+
+async function doSave() {
+  try {
+    const r = await fetch(`/session/${SESSION_ID}/step1/save`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({events})
+    });
+    if (r.ok) setSaveStatus('保存済み ✓');
+    else setSaveStatus('保存失敗');
+  } catch { setSaveStatus('保存失敗'); }
+}
+
+function setSaveStatus(msg) {
+  const el = document.getElementById('save-status');
+  if (el) el.textContent = msg;
+}
+
+renderEvents();
+</script>
+{% endblock %}

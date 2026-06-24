@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% from "macros.html" import step_nav %}
+{% block title %}まとめ{% endblock %}
+{% block body %}
+{{ step_nav(ws, 4) }}
+<div class="work-wrap">
+  <div class="step-header">
+    <div class="step-header-row">
+      <span class="step-num">✦</span>
+      <h2 class="step-title">まとめ</h2>
+    </div>
+    <p class="step-sub">今回の振り返りで見えた「私の恋愛傾向」を言葉にしましょう。</p>
+    <div class="step-divider"></div>
+  </div>
+
+  <div class="quote">
+    "自分の恋愛パターンを知ることは、<br>
+    これからの愛を、自分で選んでいく力になります。"
+  </div>
+
+  <div class="field">
+    <label>うまくいくパターン（うまくいっている要因）</label>
+    <textarea rows="4" id="good" placeholder="例）対等な関係性の中で、お互いの個性を尊重し合えている時。" oninput="triggerSave()">{{ ws.summary.good_patterns if ws.summary else '' }}</textarea>
+  </div>
+  <div class="field">
+    <label>うまくいかないパターン（うまくいっていない要因）</label>
+    <textarea rows="4" id="bad" placeholder="例）不安が先立ち、相手をコントロールしようとしてしまう時。" oninput="triggerSave()">{{ ws.summary.bad_patterns if ws.summary else '' }}</textarea>
+  </div>
+  <div class="field">
+    <label>今後の行動テーマ</label>
+    <textarea rows="4" id="action" placeholder="例）「自分軸で選ぶ」──相手に合わせすぎず、自分の感覚を大切にしながら関係を築く。" oninput="triggerSave()">{{ ws.summary.action_theme if ws.summary else '' }}</textarea>
+  </div>
+
+  <div class="work-nav">
+    <a href="{{ url_for('step3', session_id=ws.id) }}" class="btn btn-secondary">← 前のステップ</a>
+    <form method="POST" action="{{ url_for('complete_session', session_id=ws.id) }}" style="margin:0">
+      <button type="submit" class="btn btn-rose">完了する ✓</button>
+    </form>
+  </div>
+</div>
+<script>
+const SESSION_ID = {{ ws.id }};
+let saveTimer = null;
+function triggerSave() {
+  setSaveStatus('保存中…');
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(doSave, 900);
+}
+function g(id) { return (document.getElementById(id)||{}).value||''; }
+async function doSave() {
+  const data = { good: g('good'), bad: g('bad'), action: g('action') };
+  try {
+    const r = await fetch(`/session/${SESSION_ID}/summary/save`, {
+      method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data)
+    });
+    setSaveStatus(r.ok ? '保存済み ✓' : '保存失敗');
+  } catch { setSaveStatus('保存失敗'); }
+}
+function setSaveStatus(msg) { const el=document.getElementById('save-status'); if(el) el.textContent=msg; }
+</script>
+{% endblock %}
