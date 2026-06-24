@@ -206,7 +206,8 @@ def dashboard():
         profile = UserProfile(user_id=current_user.id)
         db.session.add(profile)
         db.session.commit()
-    return render_template('session/dashboard.html', sessions=sessions, profile=profile)
+    in_progress = next((s for s in sessions if not s.completed), None)
+    return render_template('session/dashboard.html', sessions=sessions, profile=profile, in_progress=in_progress)
 
 
 @app.route('/dashboard/profile/save', methods=['POST'])
@@ -229,6 +230,10 @@ def profile_save():
 @app.route('/session/new')
 @login_required
 def new_session():
+    existing = WorkSession.query.filter_by(user_id=current_user.id, completed=False).first()
+    if existing:
+        step_map = {1: 'step1', 2: 'step2', 3: 'step3', 4: 'session_summary'}
+        return redirect(url_for(step_map.get(existing.current_step, 'step1'), session_id=existing.id))
     ws = WorkSession(user_id=current_user.id)
     db.session.add(ws)
     db.session.flush()

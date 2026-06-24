@@ -17,11 +17,19 @@
   ('step3', 'STEP 3', 3),
   ('session_summary', 'まとめ', 4)
 ] %}
+<nav class="nav">
+  <a href="{{ url_for('dashboard') }}" class="nav-logo">{{ flower(28) }} Amour</a>
+  <div class="nav-right">
+    {% if current_user.role == 'coach' %}
+    <span class="nav-badge">COACH</span>
+    <a href="{{ url_for('coach_dashboard') }}" class="nav-link">管理画面</a>
+    {% endif %}
+    <span class="nav-user">{{ current_user.name }}</span>
+    <a href="{{ url_for('logout') }}" class="nav-link">ログアウト</a>
+  </div>
+</nav>
 <nav class="step-nav">
   <a href="{{ url_for('dashboard') }}" class="step-nav-back">← 戻る</a>
-  {% if current_user.role == 'coach' %}
-  <a href="{{ url_for('coach_dashboard') }}" class="step-nav-back" style="color:var(--plum)">管理画面</a>
-  {% endif %}
   <div class="step-nav-steps">
     {% for endpoint, label, num in steps %}
     <a href="{{ url_for(endpoint, session_id=ws.id) }}"
