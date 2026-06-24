@@ -19,6 +19,9 @@
 ] %}
 <nav class="step-nav">
   <a href="{{ url_for('dashboard') }}" class="step-nav-back">← 戻る</a>
+  {% if current_user.role == 'coach' %}
+  <a href="{{ url_for('coach_dashboard') }}" class="step-nav-back" style="color:var(--plum)">管理画面</a>
+  {% endif %}
   <div class="step-nav-steps">
     {% for endpoint, label, num in steps %}
     <a href="{{ url_for(endpoint, session_id=ws.id) }}"

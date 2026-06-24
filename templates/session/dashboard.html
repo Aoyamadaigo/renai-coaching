@@ -5,6 +5,10 @@
 <nav class="nav">
   <a href="{{ url_for('dashboard') }}" class="nav-logo">{{ flower(28) }} Amour</a>
   <div class="nav-right">
+    {% if current_user.role == 'coach' %}
+    <span class="nav-badge">COACH</span>
+    <a href="{{ url_for('coach_dashboard') }}" class="nav-link">コーチ管理画面</a>
+    {% endif %}
     <span class="nav-user">{{ current_user.name }}</span>
     <a href="{{ url_for('logout') }}" class="nav-link">ログアウト</a>
   </div>
